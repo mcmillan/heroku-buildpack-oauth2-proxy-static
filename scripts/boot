@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+export OAUTH2_PROXY_HTTP_ADDRESS="http://:${PORT}"
+export OAUTH2_PROXY_UPSTREAM="file://${HOME}/build"
+
+echo "Upstream: ${OAUTH2_PROXY_UPSTREAM}"
+
+exec $BIN_DIR/oauth2-proxy

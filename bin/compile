@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+indent() {
+  sed -u "s/^/       /"
+}
+
+arrow() {
+  sed -u "s/^/-----> /"
+}
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+BUILDPACK_DIR=$(dirname $(dirname $0))
+
+OAUTH2_PROXY_VERSION="7.1.3"
+OAUTH2_PROXY_CHECKSUM="07b4b8a68f93918b10caba1132250f9bd775faf4589182d15d2a56db6600032d"
+
+echo "Downloading and extracting oauth2-proxy..." | arrow
+
+# Ensure presence of $BUILD_DIR/bin
+mkdir -p $BUILD_DIR/bin
+
+# Download oauth2-proxy from GitHub and extract into $BUILD_DIR/bin
+curl -sSfL --retry 3 --connect-timeout 3 "https://github.com/oauth2-proxy/oauth2-proxy/releases/download/v${OAUTH2_PROXY_VERSION}/oauth2-proxy-v${OAUTH2_PROXY_VERSION}.linux-amd64.tar.gz" | tar -xzC "${BUILD_DIR}/bin" --strip-components=1
+
+# Confirm checksum of extracted binary matches
+echo "${OAUTH2_PROXY_CHECKSUM}  ${BUILD_DIR}/bin/oauth2-proxy" | sha256sum -c --quiet -
+echo "Checksum (${OAUTH2_PROXY_CHECKSUM}) matches, proceeding" | indent
+echo
+
+# Copy boot script into $BUILD_DIR/bin
+echo "Copying oauth2-proxy startup script to bin/boot" | arrow
+cp "${BUILDPACK_DIR}/scripts/boot" "${BUILD_DIR}/bin"
+chmod +x "$BUILD_DIR/bin/boot"
